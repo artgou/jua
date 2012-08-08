@@ -30,6 +30,7 @@ Converter = {
     @convert(node.expr)
     
   'static-assign-expr': (node) ->
+    "#{@convert(node.base)}.#{node.value} = #{@convert(node.expr)}"
     
   'scope-assign-expr': (node) ->
     "#{node.value} = #{@convert(node.expr)}"
@@ -99,6 +100,8 @@ Converter = {
   'ret-stat': (node) ->
     if node.expr.type == 'scope-assign-expr'
       "#{@convert(node.expr)}\nreturn #{node.expr.value}"
+    else if node.expr.type == 'dyn-assign-expr'
+      "#{@convert(node.expr)}\nreturn #{@['dyn-ref-expr'](node.expr)}"
     else
       "return #{@convert(node.expr)}"
       
@@ -135,6 +138,17 @@ Converter = {
   'func-literal': (node) ->
     "function(#{node.closure.args.join(', ')})\n#{@_indent(_.map(node.closure.stats, (n) => @convert(n)).join('\n'))}\nend"
 
+  'obj-literal': (node) ->
+    "{#{_.map(node.props, (p) => "#{p.value} = #{@convert(p.expr)}").join(', ')}}"
+    
+  'static-ref-expr': (node) ->
+    "#{@convert(node.base)}.#{node.value}"
+    
+  'dyn-ref-expr': (node) ->
+    "#{@convert(node.base)}[#{@convert(node.index)}]"
+    
+  'dyn-assign-expr': (node) ->
+    "#{@convert(node.base)}[#{@convert(node.index)}] = #{@convert(node.expr)}"
 }
 
 module.exports.translate = (expr, debug) ->
@@ -146,6 +160,7 @@ module.exports.translate = (expr, debug) ->
     
   if debug
     console.log(JSON.stringify(ast, null, "  "))
+    console.log(Converter.convert(ast))
 
   Converter.convert(ast)
   
