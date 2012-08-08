@@ -43,6 +43,9 @@ Converter = {
   'null-literal': (node) ->
     'nil'
     
+  'boolean-literal': (node) ->
+    node.value.toString()
+    
   detectStringLiteral: (exprs) ->
     _.any exprs, (e) =>
       if e.type == 'add-op-expr'

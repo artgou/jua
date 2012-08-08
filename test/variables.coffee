@@ -66,3 +66,8 @@ describe 'variable declarations', ->
       a = null
 
     jua.translate(expr).should.eql "local a\na = nil\nreturn a"
+    
+  it 'should support boolean values', ->
+    expr = -> a = false; b = true
+    
+    jua.translate(expr).should.eql "local a\nlocal b\na = false\nb = true\nreturn b"
