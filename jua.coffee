@@ -4,7 +4,9 @@ util = require('util')
 
 Converter = {
   convert: (node, args...) ->
-    if this[node.type]
+    if typeof(node) == 'string'
+      node
+    else if this[node.type]
       this[node.type](node, args...)
     else
       throw "I don't know how to translate #{node.type}:\n#{JSON.stringify(node)}"
@@ -129,6 +131,10 @@ Converter = {
     block += "end" if terminate
     
     block
+    
+  'func-literal': (node) ->
+    "function(#{node.closure.args.join(', ')})\n#{@_indent(_.map(node.closure.stats, (n) => @convert(n)).join('\n'))}\nend"
+
 }
 
 module.exports.translate = (expr, debug) ->

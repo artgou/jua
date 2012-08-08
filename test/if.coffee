@@ -37,4 +37,4 @@ describe 'if structure', ->
       else
         return true
         
-    jua.translate(expr, true).should.eql "if true then\n  return false\nelseif 1 + 1 == 2 then\n  return false\nelse\n  return true\nend"
+    jua.translate(expr).should.eql "if true then\n  return false\nelseif 1 + 1 == 2 then\n  return false\nelse\n  return true\nend"
