@@ -75,6 +75,26 @@ Converter = {
       "#{@convert(node.expr)}\nreturn #{node.expr.value}"
     else
       "return #{@convert(node.expr)}"
+      
+  'call-expr': (node) ->
+    # detect conversion to number
+    if (node.expr.type == 'scope-ref-expr') && (node.expr.value == 'Number')
+      fn_expr = 'tonumber'
+    else if (node.expr.type == 'scope-ref-expr') && (node.expr.value == 'String')
+      fn_expr = 'tostring'
+    else
+      fn_expr = @convert(node.expr)
+    
+    "#{fn_expr}(#{@_args(node.args)})"
+    
+  _args: (args) ->
+    _.map(args, (a) => @convert(a)).join(', ')
+    
+  'static-method-call-expr': (node) ->
+    if (node.value == 'toString') && (node.args.length == 0)
+      "tostring(#{@convert(node.base)})"
+    else
+      "#{@convert(node.base)}.#{node.value}(#{@_args(node.args)})"
 }
 
 module.exports.translate = (expr, debug) ->
