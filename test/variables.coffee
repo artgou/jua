@@ -60,4 +60,9 @@ describe 'variable declarations', ->
       c = "#{a}:#{b}"
       
     jua.translate(expr).should.eql "local a\nlocal b\nlocal c\na = 'abc'\nb = 'def'\nc = a .. ':' .. b\nreturn c"
-    
+
+  it 'should support null values', ->
+    expr = ->
+      a = null
+
+    jua.translate(expr).should.eql "local a\na = nil\nreturn a"

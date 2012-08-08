@@ -40,6 +40,9 @@ Converter = {
   'str-literal': (node) ->
     util.inspect(node.value)
     
+  'null-literal': (node) ->
+    'nil'
+    
   detectStringLiteral: (exprs) ->
     _.any exprs, (e) =>
       if e.type == 'add-op-expr'
