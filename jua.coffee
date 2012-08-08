@@ -3,11 +3,14 @@ _ = require('underscore')
 util = require('util')
 
 Converter = {
-  convert: (node) ->
+  convert: (node, args...) ->
     if this[node.type]
-      this[node.type](node)
+      this[node.type](node, args...)
     else
       throw "I don't know how to translate #{node.type}:\n#{JSON.stringify(node)}"
+      
+  _indent: (str) ->
+    _.map(str.split("\n"), (l) -> "  #{l}").join("\n")
     
   'script-context': (node) ->
     _.map(node.stats, (n) => @convert(n)).join('\n')
@@ -16,6 +19,9 @@ Converter = {
     @convert(node.closure)
     
   'closure-context': (node) ->
+    _.map(node.stats, (n) => @convert(n)).join('\n')
+    
+  'block-stat': (node) ->
     _.map(node.stats, (n) => @convert(n)).join('\n')
     
   'expr-stat': (node) ->
@@ -70,6 +76,21 @@ Converter = {
   'sub-op-expr': (node) ->
     "#{@convert(node.left)} - #{@convert(node.right)}"
     
+  'eqs-op-expr': (node) ->
+    "#{@convert(node.left)} == #{@convert(node.right)}"
+    
+  'neqs-op-expr': (node) ->
+    "#{@convert(node.left)} ~= #{@convert(node.right)}"
+    
+  'not-op-expr': (node) ->
+    "not(#{@convert(node.expr)})"
+    
+  'and-op-expr': (node) ->
+    "(#{@convert(node.left)}) and (#{@convert(node.right)})"
+    
+  'or-op-expr': (node) ->
+    "(#{@convert(node.left)}) or (#{@convert(node.right)})"
+    
   'scope-ref-expr': (node) ->
     node.value
     
@@ -98,6 +119,16 @@ Converter = {
       "tostring(#{@convert(node.base)})"
     else
       "#{@convert(node.base)}.#{node.value}(#{@_args(node.args)})"
+      
+  'if-stat': (node, terminate = true) ->
+    block = "if #{@convert(node.expr)} then\n#{@_indent(@convert(node.thenStat))}\n"
+    if node.elseStat && (node.elseStat.type == 'if-stat')
+      block += "else#{@convert(node.elseStat, false)}"
+    else if node.elseStat
+      block += "else\n#{@_indent(@convert(node.elseStat))}\n"
+    block += "end" if terminate
+    
+    block
 }
 
 module.exports.translate = (expr, debug) ->
